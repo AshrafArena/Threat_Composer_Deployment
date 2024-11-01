@@ -1,4 +1,3 @@
-
 resource "aws_vpc" "tm_vpc" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
@@ -8,7 +7,6 @@ resource "aws_vpc" "tm_vpc" {
     Name = "tm-vpc"
   }
 }
-
 
 resource "aws_subnet" "pb_subnet_1" {
   vpc_id            = aws_vpc.tm_vpc.id
@@ -29,7 +27,6 @@ resource "aws_subnet" "pb_subnet_2" {
     Name = "pb-subnet-2"
   }
 }
-
 
 resource "aws_security_group" "app_sg" {
   vpc_id = aws_vpc.tm_vpc.id
@@ -65,7 +62,6 @@ resource "aws_security_group" "app_sg" {
   }
 }
 
-
 resource "aws_internet_gateway" "tm_igw" {
   vpc_id = aws_vpc.tm_vpc.id
 
@@ -73,7 +69,6 @@ resource "aws_internet_gateway" "tm_igw" {
     Name = "tm-igw"
   }
 }
-
 
 resource "aws_route_table" "app_rt" {
   vpc_id = aws_vpc.tm_vpc.id
@@ -88,7 +83,6 @@ resource "aws_route_table" "app_rt" {
   }
 }
 
-
 resource "aws_route_table_association" "assoc_pb_subnet_1" {
   subnet_id      = aws_subnet.pb_subnet_1.id
   route_table_id = aws_route_table.app_rt.id
@@ -98,7 +92,6 @@ resource "aws_route_table_association" "assoc_pb_subnet_2" {
   subnet_id      = aws_subnet.pb_subnet_2.id
   route_table_id = aws_route_table.app_rt.id
 }
-
 
 resource "aws_lb" "threat_model_app_lb" {
   name               = "app-lb"
@@ -115,7 +108,6 @@ resource "aws_lb" "threat_model_app_lb" {
     Name = "app-lb"
   }
 }
-
 
 resource "aws_lb_target_group" "tm_tg" {
   name        = "tm-tg"
@@ -157,26 +149,21 @@ resource "aws_lb_listener" "https_listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.tm_tg.arn
   }
-
 }
-
-
 
 data "aws_acm_certificate" "cert" {
   domain   = "eurobase.zeynabyusuf.com"
   statuses = ["ISSUED"]
 }
 
-
-resource "cloudflare_dns_record" "alb_cname_record" {
-  zone_id = var.cloudflare_zone_id
-  name    = "eurobase"
+# Route 53 DNS Record (replacing Cloudflare)
+resource "aws_route53_record" "alb_cname_record" {
+  zone_id = var.route53_zone_id              # Use Route 53 Zone ID
+  name    = "threatcomposer"
   type    = "CNAME"
-  content = aws_lb.threat_model_app_lb.dns_name
   ttl     = 300
-  proxied = false
+  records = [aws_lb.threat_model_app_lb.dns_name]
 }
-
 
 resource "aws_ecs_cluster" "threat_model_cluster" {
   name = "threat-model-cluster"
@@ -187,7 +174,6 @@ resource "aws_ecs_cluster" "threat_model_cluster" {
   }
 }
 
-
 resource "aws_ecs_task_definition" "threat_app_td" {
   family                   = "threat-app-td"
   network_mode             = "awsvpc"
@@ -197,21 +183,18 @@ resource "aws_ecs_task_definition" "threat_app_td" {
   cpu                      = "1024"
   memory                   = "3072"
 
-  container_definitions = jsonencode([
-    {
-      name      = "tm-container"
-      image     = var.threat_app_container_image
-      cpu       = 0
-      essential = true
-      portMappings = [{
-        containerPort = 3000
-        hostPort      = 3000
-        protocol      = "tcp"
-      }]
-    }
-  ])
+  container_definitions = jsonencode([{
+    name      = "tm-container"
+    image     = var.threat_app_container_image
+    cpu       = 0
+    essential = true
+    portMappings = [{
+      containerPort = 3000
+      hostPort      = 3000
+      protocol      = "tcp"
+    }]
+  }])
 }
-
 
 resource "aws_ecs_service" "threat_app_service" {
   name            = "my-tm-service"
@@ -247,3 +230,4 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
   role       = data.aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
+
