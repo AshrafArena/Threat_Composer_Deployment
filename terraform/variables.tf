@@ -1,12 +1,8 @@
-variable "cloudflare_api_token" {
-  description = "API token for Cloudflare"
+variable "route53_zone_id" {
+  description = "Route 53 Zone ID for the domain"
   type        = string
 }
 
-variable "cloudflare_zone_id" {
-  description = "Cloudflare Zone ID for the domain"
-  type        = string
-}
 variable "threat_app_container_image" {
   description = "URI for the threat app in ECR"
   type        = string
@@ -17,9 +13,8 @@ variable "acm_certificate_arn" {
   type        = string
 }
 
-
 variable "region" {
-  description = "aws region"
+  description = "AWS region"
   type        = string
   default     = "eu-west-2"
 }
