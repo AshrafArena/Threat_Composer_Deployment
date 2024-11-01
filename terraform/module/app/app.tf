@@ -153,7 +153,7 @@ resource "aws_lb_listener" "https_listener" {
 }
 
 data "aws_acm_certificate" "cert" {
-  domain   = "threatcomposer.achrafm.com"
+  domain   = "*.achrafm.com"
   statuses = ["ISSUED"]
 }
 
