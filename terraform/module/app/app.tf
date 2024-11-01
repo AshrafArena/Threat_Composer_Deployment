@@ -1,3 +1,4 @@
+
 resource "aws_vpc" "tm_vpc" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
@@ -152,7 +153,7 @@ resource "aws_lb_listener" "https_listener" {
 }
 
 data "aws_acm_certificate" "cert" {
-  domain   = "eurobase.zeynabyusuf.com"
+  domain   = "threatcomposer.achrafm.com"
   statuses = ["ISSUED"]
 }
 
@@ -230,4 +231,3 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
   role       = data.aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
-
